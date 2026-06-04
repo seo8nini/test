@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生日快樂！雷霆咆哮究極盲包</title>
+    <style>
+        body { 
+            background-color: #0b0c10; 
+            color: #fff; 
+            font-family: "Microsoft JhengHei", sans-serif; 
+            text-align: center; 
+            padding: 20px;
+            margin: 0;
+            user-select: none;
+        }
+        h1 {
+            font-size: 32px;
+            color: #66fcf1;
+            text-shadow: 0 0 10px rgba(102,252,241,0.5);
+            margin-top: 10px;
+        }
+        .pool-title { 
+            font-size: 20px; 
+            color: #c5a880; 
+            margin-bottom: 30px; 
+        }
+        .card-container { 
+            display: flex; 
+            justify-content: center; 
+            gap: 30px; 
+            margin-top: 20px; 
+            flex-wrap: wrap;
+        }
+        .card-wrapper { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+        
+        /* 核心卡片容器：280x420 長方形 */
+        .card { 
+            width: 280px;  
+            height: 420px; 
+            cursor: pointer; 
+            transition: transform 0.3s, box-shadow 0.3s; 
+            position: relative; 
+            border-radius: 8px;
+        }
+        .card:hover { 
+            transform: scale(1.05); 
+        }
+        
+        .card img {
+            position: absolute;
+            display: block;
+        }
+
+        /* 底層：長方形框線背景 */
+        .card-frame {
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; 
+            border-radius: 8px;
+        }
+
+        /* 上層：正方形內容圖片置中 */
+        .card-bg {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 210px;  
+            height: 210px; 
+            object-fit: cover; 
+            z-index: 2;        
+            border-radius: 6px;
+        }
+        
+        /* 兩種邊框的陰影特效 */
+        .gold-glow { box-shadow: 0 0 25px rgba(212, 175, 55, 0.6); }
+        .rainbow-glow { box-shadow: 0 0 30px rgba(255, 0, 128, 0.7); }
+        
+        /* Change 按鈕樣式 */
+        .change-btn { 
+            margin-top: 15px; 
+            padding: 10px 24px; 
+            background: linear-gradient(135deg, #1f2833, #2c3e50);
+            color: #66fcf1; 
+            border: 1px solid #45f3ff; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+        }
+        .change-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #45f3ff, #1f2833);
+            color: #fff;
+            box-shadow: 0 0 10px rgba(69,243,255,0.5);
+        }
+        .change-btn:disabled { 
+            background: #151515; color: #444; border-color: #222; box-shadow: none; cursor: not-allowed; 
+        }
+        
+        /* 🎁 已選擇紀錄區域 */
+        .log { 
+            margin-top: 50px; 
+            font-size: 20px; 
+            color: #45f3ff; 
+            background-color: rgba(31, 40, 51, 0.6);
+            padding: 15px; 
+            border-radius: 10px; 
+            display: flex; 
+            justify-content: center;
+            align-items: center; 
+            gap: 10px; 
+            border: 1px solid rgba(102,252,241,0.2);
+        }
+        
+        .log-icon {
+            width: 64px; 
+            height: 64px;
+            object-fit: cover;
+            border-radius: 4px;
+            vertical-align: middle;
+        }
+
+        /* 結算畫面特製 CSS */
+        .result-title { 
+            font-size: 40px; 
+            color: #ff007f; 
+            text-shadow: 0 0 20px rgba(255,0,127,0.8); 
+            animation: pulse 2s infinite; 
+        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+        
+        .pool-title img {
+            width: 120px; 
+            height: 120px;
+            object-fit: cover;
+            border-radius: 6px;
+            vertical-align: middle;
+            margin: 0 15px; 
+        }
+        
+        .pool-title span {
+            font-size: 28px;
+            color: #c5a880;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 id="roundTitle">第一輪：金色獎池</h1>
+    <div id="poolSubtitle" class="pool-title">請點選一張卡片作為你的生日禮物</div>
+
+    <div class="card-container" id="cardContainer"></div>
+
+    <div>
+        <div class="log" id="logHistory">
+            <span style="color: #45f3ff;">🎁 已選擇紀錄：</span>
+            目前尚未選擇任何獎勵
+        </div>
+    </div>
+
+<script>
+    // 金色池：g1 ~ g13
+    const goldPool = [];
+    for(let i = 1; i <= 13; i++) {
+        goldPool.push({
+            id: i,
+            name: i === 13 ? "【質變 : 稜彩】" : `金色獎勵 ${i}`,
+            fileName: `g${i}.png`,
+            isSpecial: i === 13, 
+            frame: 'gd_inframe.png',
+            glowClass: 'gold-glow'
+        });
+    }
+
+    // 彩色池：r1 ~ r8
+    const rainbowPool = [];
+    for(let i = 1; i <= 8; i++) {
+        rainbowPool.push({
+            id: i + 100, 
+            name: `彩色大獎 ${i}`,
+            fileName: `r${i}.png`,
+            isSpecial: false,
+            frame: 'rb_inframe.png',
+            glowClass: 'rainbow-glow'
+        });
+    }
+
+    let currentStage = 1; 
+    let currentSlots = []; 
+    let history = []; 
+
+    // 檢查目前畫面上是否已經存在 g13 或是已經突變後的卡片
+    function hasG13Appeared() {
+        return currentSlots.some(slot => slot.data && (slot.data.id === 13 || slot.hasMutated));
+    }
+
+    // 隨機撈牌與 Change 過濾核心邏輯
+    function getRandomCard(pool, excludeIds, isGoldPool) {
+        // 核心修正：將「目前畫面上的卡片 ID」與「歷史紀錄已選走的卡片 ID」全部合併排除
+        const historyIds = history.map(item => item.id);
+        const allExcludeIds = [...new Set([...excludeIds, ...historyIds])];
+
+        let available = pool.filter(item => !allExcludeIds.includes(item.id));
+        
+        // 如果是金色池且畫面上已有質變卡(或已突變卡)，其餘金框 Change 就不再出現 g13
+        if (isGoldPool && hasG13Appeared()) {
+            available = available.filter(item => item.id !== 13);
+        }
+        
+        // 防呆：如果可抽取的牌堆被扣到沒了，就從原始池子隨機抓
+        if (available.length === 0) return pool[Math.floor(Math.random() * pool.length)];
+        return available[Math.floor(Math.random() * available.length)];
+    }
+
+    function initRound() {
+        const pool = currentStage === 1 ? goldPool : rainbowPool;
+        const currentPoolType = currentStage === 1 ? 'gold' : 'rainbow';
+        document.getElementById('roundTitle').innerText = currentStage === 1 ? "第一輪：金色獎池" : "第二輪：彩色獎池";
+        document.getElementById('poolSubtitle').innerText = currentStage === 1 ? "請點選一張卡片作為你的生日禮物" : "請從中選擇一個獎勵";
+        
+        // 刷新輪次時，剔除已被選走的卡片
+        const selectedIds = history.map(item => item.id);
+        let availablePool = pool.filter(item => !selectedIds.includes(item.id));
+        
+        if (availablePool.length < 3) availablePool = pool;
+
+        let shuffled = [...availablePool].sort(() => 0.5 - Math.random());
+        
+        currentSlots = [
+            { data: shuffled[0], changeDisabled: false, poolType: currentPoolType, hasMutated: false },
+            { data: shuffled[1], changeDisabled: false, poolType: currentPoolType, hasMutated: false },
+            { data: shuffled[2], changeDisabled: false, poolType: currentPoolType, hasMutated: false }
+        ];
+
+        renderCards();
+    }
+
+    function renderCards() {
+        const container = document.getElementById('cardContainer');
+        container.innerHTML = '';
+
+        currentSlots.forEach((slot, index) => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'card-wrapper';
+
+            const card = document.createElement('div');
+            card.className = `card ${slot.data.glowClass}`;
+            
+            card.onclick = () => handleCardClick(index);
+
+            const imgFrame = document.createElement('img');
+            imgFrame.className = 'card-frame';
+            imgFrame.src = slot.data.frame;
+
+            const imgBg = document.createElement('img');
+            imgBg.className = 'card-bg';
+            imgBg.src = slot.data.fileName;
+
+            card.appendChild(imgFrame);
+            card.appendChild(imgBg);
+
+            const btn = document.createElement('button');
+            btn.className = 'change-btn';
+            btn.innerText = slot.changeDisabled ? '已鎖定' : 'Change (不限次數)'; 
+            btn.disabled = slot.changeDisabled; 
+            
+            if (!slot.changeDisabled) {
+                btn.onclick = (e) => {
+                    e.stopPropagation(); 
+                    changeCard(index);
+                };
+            }
+
+            wrapper.appendChild(card);
+            wrapper.appendChild(btn);
+            container.appendChild(wrapper);
+        });
+    }
+
+    function changeCard(index) {
+        const isGold = currentSlots[index].poolType === 'gold';
+        const pool = isGold ? goldPool : rainbowPool;
+        
+        // 當前畫面上另外兩個位置的 ID 
+        const currentIds = currentSlots.map(s => s.data.id);
+        
+        // 核心Bug修復點：getRandomCard 內部現在會自動把 currentIds 加上 history 裡的已選 ID 做雙重排除
+        const newCard = getRandomCard(pool, currentIds, isGold);
+        currentSlots[index].data = newCard;
+        renderCards();
+    }
+
+    // 處理點擊卡片的邏輯
+    function handleCardClick(index) {
+        const slot = currentSlots[index];
+        
+        // 條件一：在第一輪金色池，且點到尚未突變的特殊質變卡 g13
+        if (currentStage === 1 && slot.poolType === 'gold' && slot.data.isSpecial && !slot.hasMutated) {
+            alert("✨ 檢測到【質變 : 稜彩】代碼！卡片正在突變... ✨\n\n此格將轉變為「彩色大獎」，逼逼拉卜！");
+            
+            const selectedRainbowIds = history.map(item => item.id);
+            let availableRainbows = rainbowPool.filter(item => !selectedRainbowIds.includes(item.id));
+            if (availableRainbows.length === 0) availableRainbows = rainbowPool;
+            
+            const randomRainbow = availableRainbows[Math.floor(Math.random() * availableRainbows.length)];
+            
+            slot.data = { ...randomRainbow };
+            slot.hasMutated = true;
+            slot.changeDisabled = true; 
+            
+            renderCards();
+            return;
+        }
+
+        // 條件二：點擊決定選擇的卡片
+        const selected = slot.data;
+        history.push({ ...selected }); 
+        updateLog();
+
+        if (currentStage === 1) {
+            currentStage = 2;
+            initRound(); 
+        } else {
+            showFinalResult();
+        }
+    }
+
+    function updateLog() {
+        const logHistory = document.getElementById('logHistory');
+        logHistory.innerHTML = '<span style="color: #45f3ff;">🎁 已選擇紀錄：</span>';
+        
+        if (history.length === 0) {
+            logHistory.innerHTML += "目前尚未選擇任何獎勵";
+            return;
+        }
+
+        history.forEach((selected, i) => {
+            const miniImg = document.createElement('img');
+            miniImg.src = selected.fileName; 
+            miniImg.className = 'log-icon';
+            if (selected.glowClass === 'gold-glow') {
+                miniImg.style.boxShadow = '0 0 10px rgba(212, 175, 55, 0.4)';
+                miniImg.style.border = '1px solid rgba(212, 175, 55, 0.3)';
+            } else if (selected.glowClass === 'rainbow-glow') {
+                miniImg.style.boxShadow = '0 0 10px rgba(255, 0, 128, 0.5)';
+                miniImg.style.border = '1px solid rgba(255, 0, 128, 0.4)';
+            }
+            logHistory.appendChild(miniImg);
+
+            if (i < history.length - 1) {
+                const arrow = document.createElement('span');
+                arrow.innerText = ' ➔ ';
+                arrow.style.color = '#c5a880';
+                logHistory.appendChild(arrow);
+            }
+        });
+    }
+
+    function showFinalResult() {
+        document.getElementById('roundTitle').className = "result-title";
+        document.getElementById('roundTitle').innerText = "🎂 祝內湖力貝爾生日快樂！ 🎂";
+        
+        const poolSubtitle = document.getElementById('poolSubtitle');
+        poolSubtitle.innerHTML = `<h3>牛逼克拉斯！最終獎勵：</h3>`;
+
+        history.forEach((selected, i) => {
+            const resultImg = document.createElement('img');
+            resultImg.src = selected.fileName; 
+            resultImg.style.boxShadow = selected.glowClass === 'gold-glow' ? '0 0 20px rgba(212, 175, 55, 0.6)' : '0 0 25px rgba(255, 0, 128, 0.7)';
+            resultImg.style.border = selected.glowClass === 'gold-glow' ? '2px solid rgba(212, 175, 55, 0.4)' : '2px solid rgba(255, 0, 128, 0.5)';
+            poolSubtitle.appendChild(resultImg);
+
+            if (i < history.length - 1) {
+                const arrow = document.createElement('span');
+                arrow.innerText = ' 與 ';
+                poolSubtitle.appendChild(arrow);
+            }
+        });
+        
+        document.getElementById('cardContainer').innerHTML = '';
+    }
+
+    initRound();
+</script>
+</body>
+</html>
