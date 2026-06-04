@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>生日快樂！雷霆咆哮究極盲包</title>
+    <title>生日快樂! qaz0204/當世琉璃/c_c_r.613</title>
     <style>
         body { 
             background-color: #0b0c10; 
@@ -38,7 +38,7 @@
             align-items: center; 
         }
         
-        /* 核心卡片容器：280x420 長方形 */
+        /* 核心卡片容器：電腦版標準 280x420 長方形 */
         .card { 
             width: 280px;  
             height: 420px; 
@@ -94,6 +94,7 @@
             font-weight: bold;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             transition: all 0.2s;
+            font-size: 16px;
         }
         .change-btn:hover:not(:disabled) {
             background: linear-gradient(135deg, #45f3ff, #1f2833);
@@ -117,6 +118,7 @@
             align-items: center; 
             gap: 10px; 
             border: 1px solid rgba(102,252,241,0.2);
+            flex-wrap: wrap;
         }
         
         .log-icon {
@@ -149,6 +151,53 @@
             font-size: 28px;
             color: #c5a880;
             vertical-align: middle;
+        }
+
+        /* ==========================================
+           📱 RWD 手機版防跑版特製響應式 CSS 修正區
+           ========================================== */
+        @media screen and (max-width: 768px) {
+            h1 {
+                font-size: 24px; /* 縮小手機標題 */
+            }
+            .pool-title {
+                font-size: 16px;
+                margin-bottom: 15px;
+            }
+            .card-container {
+                gap: 15px; /* 縮小卡片間距，防止卡片被擠到下一行時太鬆散 */
+            }
+            /* 手機版將卡片等比例縮小至 0.8 倍 (224x336)，確保畫面裝得下 */
+            .card {
+                width: 224px;
+                height: 336px;
+            }
+            /* 手機版正方形內圖同步等比例縮小 */
+            .card-bg {
+                width: 168px;
+                height: 168px;
+            }
+            .change-btn {
+                padding: 8px 18px;
+                font-size: 14px; /* 稍微縮小按鈕 */
+                margin-top: 10px;
+            }
+            .log {
+                font-size: 16px;
+                padding: 10px;
+            }
+            .log-icon {
+                width: 48px; /* 縮小歷史紀錄小圖 */
+                height: 48px;
+            }
+            .pool-title img {
+                width: 90px; /* 縮小結算畫面大圖 */
+                height: 90px;
+                margin: 0 8px;
+            }
+            .pool-title span {
+                font-size: 20px;
+            }
         }
     </style>
 </head>
@@ -197,25 +246,20 @@
     let currentSlots = []; 
     let history = []; 
 
-    // 檢查目前畫面上是否已經存在 g13 或是已經突變後的卡片
     function hasG13Appeared() {
         return currentSlots.some(slot => slot.data && (slot.data.id === 13 || slot.hasMutated));
     }
 
-    // 隨機撈牌與 Change 過濾核心邏輯
     function getRandomCard(pool, excludeIds, isGoldPool) {
-        // 核心修正：將「目前畫面上的卡片 ID」與「歷史紀錄已選走的卡片 ID」全部合併排除
         const historyIds = history.map(item => item.id);
         const allExcludeIds = [...new Set([...excludeIds, ...historyIds])];
 
         let available = pool.filter(item => !allExcludeIds.includes(item.id));
         
-        // 如果是金色池且畫面上已有質變卡(或已突變卡)，其餘金框 Change 就不再出現 g13
         if (isGoldPool && hasG13Appeared()) {
             available = available.filter(item => item.id !== 13);
         }
         
-        // 防呆：如果可抽取的牌堆被扣到沒了，就從原始池子隨機抓
         if (available.length === 0) return pool[Math.floor(Math.random() * pool.length)];
         return available[Math.floor(Math.random() * available.length)];
     }
@@ -226,7 +270,6 @@
         document.getElementById('roundTitle').innerText = currentStage === 1 ? "第一輪：金色獎池" : "第二輪：彩色獎池";
         document.getElementById('poolSubtitle').innerText = currentStage === 1 ? "請點選一張卡片作為你的生日禮物" : "請從中選擇一個獎勵";
         
-        // 刷新輪次時，剔除已被選走的卡片
         const selectedIds = history.map(item => item.id);
         let availablePool = pool.filter(item => !selectedIds.includes(item.id));
         
@@ -288,23 +331,18 @@
     function changeCard(index) {
         const isGold = currentSlots[index].poolType === 'gold';
         const pool = isGold ? goldPool : rainbowPool;
-        
-        // 當前畫面上另外兩個位置的 ID 
         const currentIds = currentSlots.map(s => s.data.id);
         
-        // 核心Bug修復點：getRandomCard 內部現在會自動把 currentIds 加上 history 裡的已選 ID 做雙重排除
         const newCard = getRandomCard(pool, currentIds, isGold);
         currentSlots[index].data = newCard;
         renderCards();
     }
 
-    // 處理點擊卡片的邏輯
     function handleCardClick(index) {
         const slot = currentSlots[index];
         
-        // 條件一：在第一輪金色池，且點到尚未突變的特殊質變卡 g13
         if (currentStage === 1 && slot.poolType === 'gold' && slot.data.isSpecial && !slot.hasMutated) {
-            alert("✨ 檢測到【質變 : 稜彩】代碼！卡片正在突變... ✨\n\n此格將轉變為「彩色大獎」，逼逼拉卜！");
+            alert("✨ 握曹！是【質變 : 稜彩】✨\n\n巴巴博弈 歪比巴柏 比比拉布");
             
             const selectedRainbowIds = history.map(item => item.id);
             let availableRainbows = rainbowPool.filter(item => !selectedRainbowIds.includes(item.id));
@@ -320,7 +358,6 @@
             return;
         }
 
-        // 條件二：點擊決定選擇的卡片
         const selected = slot.data;
         history.push({ ...selected }); 
         updateLog();
@@ -366,7 +403,7 @@
 
     function showFinalResult() {
         document.getElementById('roundTitle').className = "result-title";
-        document.getElementById('roundTitle').innerText = "🎂 祝內湖力貝爾生日快樂！ 🎂";
+        document.getElementById('roundTitle').innerText = "🎂 祝內湖力貝爾本熊生日快樂 🎂";
         
         const poolSubtitle = document.getElementById('poolSubtitle');
         poolSubtitle.innerHTML = `<h3>牛逼克拉斯！最終獎勵：</h3>`;
