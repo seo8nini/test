@@ -138,19 +138,26 @@
         }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
         
+        /* 核心修正：結算畫面中間的兩張選擇圖片放大 */
         .pool-title img {
-            width: 120px; 
-            height: 120px;
-            object-fit: cover;
-            border-radius: 6px;
+            width: 200px; /* 從 120px 大幅放大到 200px */
+            height: 200px; /* 保持正方形 */
+            object-fit: cover; 
+            border-radius: 8px;
             vertical-align: middle;
-            margin: 0 15px; 
+            margin: 15px; /* 增加圖片四周留白，看起來更舒服 */
         }
         
         .pool-title span {
-            font-size: 28px;
-            color: #c5a880;
+            font-size: 32px; /* 把中間的「與」字稍微放大 */
+            color: #66fcf1;
+            text-shadow: 0 0 8px rgba(102,252,241,0.6);
             vertical-align: middle;
+        }
+
+        /* 當進入結算狀態時，強制讓下方的已選擇紀錄推到最下面 */
+        .final-logged {
+            margin-top: 80px !important;
         }
 
         /* ==========================================
@@ -158,28 +165,26 @@
            ========================================== */
         @media screen and (max-width: 768px) {
             h1 {
-                font-size: 24px; /* 縮小手機標題 */
+                font-size: 24px; 
             }
             .pool-title {
                 font-size: 16px;
                 margin-bottom: 15px;
             }
             .card-container {
-                gap: 15px; /* 縮小卡片間距，防止卡片被擠到下一行時太鬆散 */
+                gap: 15px; 
             }
-            /* 手機版將卡片等比例縮小至 0.8 倍 (224x336)，確保畫面裝得下 */
             .card {
                 width: 224px;
                 height: 336px;
             }
-            /* 手機版正方形內圖同步等比例縮小 */
             .card-bg {
                 width: 168px;
                 height: 168px;
             }
             .change-btn {
                 padding: 8px 18px;
-                font-size: 14px; /* 稍微縮小按鈕 */
+                font-size: 14px; 
                 margin-top: 10px;
             }
             .log {
@@ -187,16 +192,20 @@
                 padding: 10px;
             }
             .log-icon {
-                width: 48px; /* 縮小歷史紀錄小圖 */
+                width: 48px; 
                 height: 48px;
             }
+            /* 手機版結算圖片微調，避免超出手機螢幕 */
             .pool-title img {
-                width: 90px; /* 縮小結算畫面大圖 */
-                height: 90px;
-                margin: 0 8px;
+                width: 140px; 
+                height: 140px;
+                margin: 10px 5px;
             }
             .pool-title span {
-                font-size: 20px;
+                font-size: 24px;
+            }
+            .final-logged {
+                margin-top: 40px !important;
             }
         }
     </style>
@@ -403,16 +412,19 @@
 
     function showFinalResult() {
         document.getElementById('roundTitle').className = "result-title";
-        document.getElementById('roundTitle').innerText = "🎂祝生日快樂🎂\n🎂內湖力貝爾🎂\n🎂c_c_r.613🎂";
+        document.getElementById('roundTitle').innerText = "🎂祝生日快樂🎂\n🎂c_c_r.613🎂\n🎂qaz0204🎂\n🎂內湖力貝爾🎂";
         
         const poolSubtitle = document.getElementById('poolSubtitle');
         poolSubtitle.innerHTML = `<h3>牛逼克拉斯！最終獎勵：</h3>`;
 
+        // 核心修正：將下方的紀錄區塊加上額外的間距，讓它靠下排版
+        document.getElementById('logHistory').classList.add('final-logged');
+
         history.forEach((selected, i) => {
             const resultImg = document.createElement('img');
             resultImg.src = selected.fileName; 
-            resultImg.style.boxShadow = selected.glowClass === 'gold-glow' ? '0 0 20px rgba(212, 175, 55, 0.6)' : '0 0 25px rgba(255, 0, 128, 0.7)';
-            resultImg.style.border = selected.glowClass === 'gold-glow' ? '2px solid rgba(212, 175, 55, 0.4)' : '2px solid rgba(255, 0, 128, 0.5)';
+            resultImg.style.boxShadow = selected.glowClass === 'gold-glow' ? '0 0 25px rgba(212, 175, 55, 0.7)' : '0 0 30px rgba(255, 0, 128, 0.8)';
+            resultImg.style.border = selected.glowClass === 'gold-glow' ? '3px solid rgba(212, 175, 55, 0.5)' : '3px solid rgba(255, 0, 128, 0.6)';
             poolSubtitle.appendChild(resultImg);
 
             if (i < history.length - 1) {
